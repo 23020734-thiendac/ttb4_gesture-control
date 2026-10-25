@@ -1,24 +1,29 @@
 # TurtleBot 4 Auto Gesture Control – Tuần 6
 
-Repository này chỉ chứa package ROS 2 của tuần 6: điều khiển TurtleBot 4
-bằng cử chỉ tay, chạy trong Gazebo và quan sát bằng RViz. World AWS RoboMaker
-Small House cùng các model mà world tham chiếu đã được đóng gói bên trong
-`tb4_week6/simulation`, nên bản clone không phụ thuộc vào package tuần 5 hay
-đường dẫn tuyệt đối của máy phát triển.
+## Tóm tắt khối xử lý tuần 6
 
-Không đưa vào repository này: `tb4_week5`, `tb4_sim`, map maze, dataset, kết
-quả train, build/install/log và các file báo cáo.
+Hệ thống tuần 6 gồm ba khối chính: khối camera thu hình từ webcam và dùng
+OpenCV/MediaPipe để nhận diện cử chỉ tay; khối xử lý lọc confidence, ổn định
+nhiều frame, chọn hành vi và chờ tín hiệu xác nhận; khối điều khiển chuyển
+hành vi thành lệnh vận tốc `/cmd_vel` để TurtleBot 4 thực hiện trong Gazebo.
+RViz dùng để quan sát robot, TF và trạng thái mô phỏng. World AWS RoboMaker
+Small House cùng các model cần thiết đã được đóng gói trong `tb4_week6/simulation`.
 
-## Tính năng
+## Bảng ánh xạ cử chỉ và hành vi
 
-- Webcam → OpenCV → MediaPipe Gesture Recognizer, có landmark/skeleton.
-- Lọc confidence và frame ổn định trước khi phát hành cử chỉ.
-- `Military Salute`: robot xoay trái–phải để chào.
-- `OK`: robot chạy hình số 8 khép kín.
-- `Pointing Up`: robot tiến–lùi.
-- `Victory`: robot chạy một vòng tròn đủ 360 độ.
-- `Thumbs Up`: xác nhận một lần; không cần giữ tay khi robot đang thực hiện.
-- `Open Palm`: dừng ngay; `Closed Fist`: hủy hành vi.
+| Cử chỉ tay | Vai trò trong hệ thống | Hành vi của robot |
+|---|---|---|
+| `Military Salute` | Chọn hành vi chào điều lệnh | Xoay trái–phải với biên độ rộng để chào |
+| `OK` | Chọn hành vi quỹ đạo số 8 | Chạy hai vòng tròn ngược chiều, tạo hình số 8 khép kín |
+| `Pointing Up` | Chọn hành vi tiến–lùi | Đi thẳng tiến và lùi theo các đoạn đã cấu hình |
+| `Victory` | Chọn hành vi vòng tròn | Chạy một vòng tròn đủ 360 độ |
+| `Thumbs Up` | Xác nhận hành vi đã chọn | Xác nhận một lần; robot thực hiện đến khi hoàn thành |
+| `Open Palm` | Lệnh an toàn tức thời | Dừng robot ngay lập tức |
+| `Closed Fist` | Hủy hành vi đang chờ hoặc đang chạy | Hủy nhiệm vụ và đưa robot về trạng thái chờ |
+
+Các hành vi `Military Salute`, `OK`, `Pointing Up` và `Victory` cần một lần
+`Thumbs Up` để xác nhận. Sau khi xác nhận, không cần giữ cử chỉ trong suốt
+thời gian robot thực hiện nhiệm vụ.
 
 ## Cấu trúc
 
@@ -29,7 +34,7 @@ tb4_week6/
 │   └── week6_small_house_sim.launch.py
 ├── simulation/
 │   ├── worlds/small_house.world
-│   └── models/                  # model/texture được world tham chiếu
+│   └── models/
 ├── models/gesture_recognizer.task
 ├── rviz/gesture_control.rviz
 ├── tb4_week6/                   # gesture_recognition_node và robot_behavior_node
@@ -56,14 +61,6 @@ sudo apt install python3-pip python3-opencv python3-numpy \
   ros-humble-turtlebot4-simulator ros-humble-ros-gz-bridge \
   ros-humble-ros-ign-gazebo
 python3 -m pip install --user mediapipe opencv-python
-```
-
-Nếu hệ thống đã có các package TurtleBot 4 tương đương thì không cần cài lại.
-`rosdep` sẽ kiểm tra các dependency ROS còn thiếu trong package:
-
-```bash
-sudo rosdep init 2>/dev/null || true
-rosdep update
 ```
 
 ## Clone và build

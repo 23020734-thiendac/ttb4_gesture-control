@@ -1,28 +1,32 @@
 # TB4 Week 6 – Điều khiển TurtleBot 4 bằng cử chỉ tay
 
-Đây là package ROS 2 duy nhất của tuần 6. Package đã bao gồm launch Gazebo,
-world và model AWS RoboMaker Small House cần cho bài thực hành, vì vậy không
-phụ thuộc vào `tb4_week5`, `tb4_sim` hoặc đường dẫn tuyệt đối của máy người
-phát triển.
+## Tóm tắt khối xử lý tuần 6
 
-## Chức năng
+Khối xử lý tuần 6 nhận hình ảnh từ webcam, dùng OpenCV và MediaPipe để lấy
+landmark bàn tay, sau đó lọc confidence và ổn định nhiều frame. Cử chỉ ổn định
+được gửi qua `/detected_gesture` tới node xử lý hành vi. Node này chọn hành vi,
+nhận `Thumbs Up` xác nhận và phát lệnh vận tốc `/cmd_vel` cho TurtleBot 4.
+Gazebo mô phỏng chuyển động và `/odom` được dùng để kiểm tra quỹ đạo; RViz
+hiển thị robot và trạng thái mô phỏng.
 
-- Webcam laptop/USB → OpenCV → MediaPipe Gesture Recognizer.
-- Hiển thị landmark và skeleton bàn tay trên cửa sổ camera.
-- Lọc confidence và nhiều frame ổn định trước khi phát hành cử chỉ.
-- `Military Salute`: chọn hành vi robot xoay trái–phải để chào.
-- `OK`: chọn quỹ đạo số 8 gồm hai vòng tròn ngược chiều.
-- `Pointing Up`: chọn hành vi tiến–lùi.
-- `Victory`: chọn chạy một vòng tròn đủ 360 độ.
-- `Thumbs Up`: xác nhận hành vi một lần; không cần giữ tay trong suốt nhiệm vụ.
-- `Open Palm`: dừng ngay; `Closed Fist`: hủy hành vi.
+## Bảng ánh xạ cử chỉ và hành vi
+
+| Cử chỉ tay | Vai trò | Hành vi robot |
+|---|---|---|
+| `Military Salute` | Chọn hành vi chào điều lệnh | Xoay trái–phải để chào |
+| `OK` | Chọn quỹ đạo số 8 | Hai vòng tròn ngược chiều, khép kín |
+| `Pointing Up` | Chọn tiến–lùi | Tiến và lùi theo đoạn đã cấu hình |
+| `Victory` | Chọn vòng tròn | Một vòng đủ 360 độ |
+| `Thumbs Up` | Xác nhận | Xác nhận một lần, không cần giữ tay |
+| `Open Palm` | Dừng khẩn cấp | Dừng ngay lập tức |
+| `Closed Fist` | Hủy hành vi | Hủy nhiệm vụ và chờ lệnh mới |
 
 ## Nội dung package
 
 - `launch/week6_gesture_control.launch.py`: khởi động toàn bộ hệ thống.
 - `launch/week6_small_house_sim.launch.py`: launch Gazebo độc lập cho Small House.
 - `simulation/worlds/small_house.world`: world mô phỏng.
-- `simulation/models/`: các model và texture mà world tham chiếu.
+- `simulation/models/`: model và texture của môi trường.
 - `models/gesture_recognizer.task`: model MediaPipe đã dùng.
 - `rviz/gesture_control.rviz`: cấu hình RViz dùng `odom` làm fixed frame.
 - `tb4_week6/gesture_recognition_node.py`: nhận diện cử chỉ.
@@ -38,21 +42,13 @@ GitHub chứa mã nguồn và tài nguyên của bài tuần 6, nhưng không th
 - Webcam hoạt động.
 - Python 3, OpenCV, NumPy và MediaPipe.
 
-Sau khi source ROS 2, có thể cài dependency ROS của package bằng `rosdep`:
+Sau khi source ROS 2, cài các thư viện cần thiết:
 
 ```bash
 sudo apt update
 sudo apt install python3-pip python3-opencv python3-numpy \
   ros-humble-turtlebot4-simulator ros-humble-ros-gz-bridge \
   ros-humble-ros-ign-gazebo
-sudo rosdep init 2>/dev/null || true
-rosdep update
-```
-
-Nếu hệ thống đã cài một gói TurtleBot 4 tương đương thì không cần cài lại gói
-đó. Cài các thư viện camera còn thiếu:
-
-```bash
 python3 -m pip install --user mediapipe opencv-python
 ```
 
@@ -86,8 +82,8 @@ ros2 launch tb4_week6 week6_gesture_control.launch.py \
 ```
 
 Launch tự đặt đường dẫn tài nguyên từ package đã cài, chờ Gazebo sẵn sàng rồi
-mới spawn robot và mở RViz. Không cần chạy `tb4_week5`, không cần copy world
-vào một thư mục tuyệt đối khác và không cần mở Gazebo/RViz thủ công.
+mới spawn robot và mở RViz. Không cần chạy package tuần trước, không cần copy
+world vào thư mục tuyệt đối khác và không cần mở Gazebo/RViz thủ công.
 
 Nếu camera không phải thiết bị số 0, chạy thêm `camera_index:=1`. Có thể tắt
 RViz bằng `week6_rviz:=false` hoặc tắt cửa sổ camera bằng `show_window:=false`.
