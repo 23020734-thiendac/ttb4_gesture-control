@@ -19,22 +19,15 @@ from launch_ros.parameter_descriptions import ParameterValue
 
 def generate_launch_description():
     week6_share = get_package_share_directory('tb4_week6')
-    week5_share = get_package_share_directory('tb4_week5')
     sim_launch = PathJoinSubstitution([
-        week5_share, 'launch', 'small_house_sim.launch.py'])
+        week6_share, 'launch', 'week6_small_house_sim.launch.py'])
     default_model = str(Path(week6_share) / 'models' / 'gesture_recognizer.task')
     rviz_config = PathJoinSubstitution([
         week6_share, 'rviz', 'gesture_control.rviz'])
 
-    # Resolve the repository root when the package is built with
-    # --symlink-install. This keeps the GitHub copy portable instead of
-    # depending on one developer's absolute home path.
-    repository_root = Path(__file__).resolve().parents[2]
-    world_root = repository_root / 'aws-robomaker-small-house-world'
-    if not world_root.is_dir():
-        world_root = Path(
-            '/home/thiendac/ros2_ws/src/TuongTacNguoi_Robot/'
-            'aws-robomaker-small-house-world')
+    simulation_root = Path(week6_share) / 'simulation'
+    world_root = simulation_root
+
 
     return LaunchDescription([
         DeclareLaunchArgument('ros_domain_id', default_value='68'),

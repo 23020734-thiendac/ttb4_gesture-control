@@ -1,80 +1,95 @@
-# TurtleBot 4 Gesture Control – Tuần 6
+# TurtleBot 4 Auto Gesture Control – Tuần 6
 
-Repository này **chỉ chứa code điều khiển TurtleBot 4 bằng cử chỉ tay của tuần 6**. Không đưa code tuần trước, world/map, dataset, kết quả train hoặc file báo cáo vào repository này.
+Repository này chỉ chứa package ROS 2 của tuần 6: điều khiển TurtleBot 4
+bằng cử chỉ tay, chạy trong Gazebo và quan sát bằng RViz. World AWS RoboMaker
+Small House cùng các model mà world tham chiếu đã được đóng gói bên trong
+`tb4_week6/simulation`, nên bản clone không phụ thuộc vào package tuần 5 hay
+đường dẫn tuyệt đối của máy phát triển.
 
-## Nội dung repository
+Không đưa vào repository này: `tb4_week5`, `tb4_sim`, map maze, dataset, kết
+quả train, build/install/log và các file báo cáo.
 
-- `tb4_week6/tb4_week6/gesture_recognition_node.py`: đọc webcam, MediaPipe và publish cử chỉ.
-- `tb4_week6/tb4_week6/robot_behavior_node.py`: chọn, xác nhận và thực thi hành vi robot.
-- `tb4_week6/launch/week6_gesture_control.launch.py`: launch hệ thống tuần 6.
-- `tb4_week6/rviz/gesture_control.rviz`: cấu hình RViz tuần 6.
-- `tb4_week6/models/gesture_recognizer.task`: model MediaPipe.
-- `tb4_week6/package.xml`, `setup.py`: cấu hình package ROS 2.
+## Tính năng
 
-Các package mô phỏng và world Small House là dependency đã có sẵn trong workspace trước đó; chúng **không được sao chép hoặc upload vào repository này**. Các file báo cáo cũng không được đưa lên GitHub.
-
-## Chức năng
-
-- Nhận diện `Pointing Up`, `Victory`, `Thumbs Up`, `Open Palm`, `Closed Fist`.
-- Nhận diện bổ sung `OK` và `Military Salute` bằng landmark bàn tay.
+- Webcam → OpenCV → MediaPipe Gesture Recognizer, có landmark/skeleton.
+- Lọc confidence và frame ổn định trước khi phát hành cử chỉ.
+- `Military Salute`: robot xoay trái–phải để chào.
+- `OK`: robot chạy hình số 8 khép kín.
 - `Pointing Up`: robot tiến–lùi.
 - `Victory`: robot chạy một vòng tròn đủ 360 độ.
-- `OK`: robot chạy hình số 8 gồm hai vòng tròn ngược chiều.
-- `Military Salute`: robot xoay trái–phải để chào.
-- `Thumbs Up`: xác nhận hành vi một lần.
-- `Open Palm`: dừng robot.
-- `Closed Fist`: hủy hành vi.
+- `Thumbs Up`: xác nhận một lần; không cần giữ tay khi robot đang thực hiện.
+- `Open Palm`: dừng ngay; `Closed Fist`: hủy hành vi.
 
-## Yêu cầu
+## Cấu trúc
 
-- Ubuntu 22.04
-- ROS 2 Humble
-- TurtleBot 4 Simulation/Gazebo
-- Python 3
-- Webcam laptop hoặc webcam USB
-- OpenCV và MediaPipe
+```text
+tb4_week6/
+├── launch/
+│   ├── week6_gesture_control.launch.py
+│   └── week6_small_house_sim.launch.py
+├── simulation/
+│   ├── worlds/small_house.world
+│   └── models/                  # model/texture được world tham chiếu
+├── models/gesture_recognizer.task
+├── rviz/gesture_control.rviz
+├── tb4_week6/                   # gesture_recognition_node và robot_behavior_node
+├── package.xml
+└── setup.py
+```
 
-Cài thư viện Python nếu cần:
+## Yêu cầu trên máy mới
+
+Clone không thể tự mang theo Ubuntu, ROS 2, Gazebo, driver webcam hoặc các
+package hệ thống. Máy mới cần:
+
+- Ubuntu 22.04 và ROS 2 Humble.
+- TurtleBot 4 Simulator/Gazebo, IROBOT Create, `ros_gz_bridge` và
+  `ros_ign_gazebo`.
+- Python 3, webcam laptop/USB, OpenCV, NumPy và MediaPipe.
+
+Sau khi cài ROS 2 Humble và source `/opt/ros/humble/setup.bash`, cài các
+package phổ biến:
 
 ```bash
+sudo apt update
+sudo apt install python3-pip python3-opencv python3-numpy \
+  ros-humble-turtlebot4-simulator ros-humble-ros-gz-bridge \
+  ros-humble-ros-ign-gazebo
 python3 -m pip install --user mediapipe opencv-python
 ```
 
-## Đưa package vào workspace
-
-Repository này chỉ cung cấp package tuần 6. Hãy đặt thư mục `tb4_week6` vào workspace đang có sẵn các dependency mô phỏng từ các tuần trước:
+Nếu hệ thống đã có các package TurtleBot 4 tương đương thì không cần cài lại.
+`rosdep` sẽ kiểm tra các dependency ROS còn thiếu trong package:
 
 ```bash
-cd /home/thiendac/ros2_ws/src/TuongTacNguoi_Robot
-# Sao chép thư mục tb4_week6 từ repository này vào đây
+sudo rosdep init 2>/dev/null || true
+rosdep update
 ```
 
-Không cần đưa các package tuần trước lên repository GitHub này.
+## Clone và build
 
-## Build
+Ví dụ tạo workspace mới tại `~/ros2_ws`:
 
 ```bash
-cd /home/thiendac/ros2_ws
-source /opt/ros/humble/setup.bash
+mkdir -p ~/ros2_ws/src/TuongTacNguoi_Robot
+cd ~/ros2_ws/src/TuongTacNguoi_Robot
+git clone https://github.com/23020734-thiendac/ttb4_gesture-control.git
 
-PYTHONNOUSERSITE=1 colcon build \
-  --symlink-install \
-  --base-paths src/TuongTacNguoi_Robot \
+cd ~/ros2_ws
+source /opt/ros/humble/setup.bash
+rosdep install --from-paths src/TuongTacNguoi_Robot/ttb4_gesture-control \
+  --ignore-src -r -y
+PYTHONNOUSERSITE=1 colcon build --symlink-install \
+  --base-paths src/TuongTacNguoi_Robot/ttb4_gesture-control \
   --packages-select tb4_week6
-
-source /home/thiendac/ros2_ws/install/setup.bash
+source install/setup.bash
 ```
 
-## Chạy chương trình
+## Chạy Gazebo + RViz + điều khiển cử chỉ
 
 ```bash
-cd /home/thiendac/ros2_ws
-
-pkill -f 'ros2 launch tb4_week6|gesture_recognition_node|robot_behavior_node|rviz2|ign gazebo|gzserver|gzclient' 2>/dev/null || true
-
-source /opt/ros/humble/setup.bash
-source install/setup.bash
-
+cd ~/ros2_ws
+export ROS_DOMAIN_ID=68
 ros2 launch tb4_week6 week6_gesture_control.launch.py \
   ros_domain_id:=68 \
   x:=5.5 y:=-1.8 z:=0.0 yaw:=0.0 \
@@ -83,17 +98,21 @@ ros2 launch tb4_week6 week6_gesture_control.launch.py \
   show_window:=true
 ```
 
-Launch này sử dụng các dependency mô phỏng đã có trong workspace, mở Gazebo, RViz và cửa sổ webcam.
+Launch tự lấy world/model từ `tb4_week6/simulation`, đặt cấu hình render để
+giảm lỗi Gazebo màn hình đen, chờ Gazebo sẵn sàng rồi mới spawn robot và mở
+RViz. Không cần chạy package tuần trước hoặc mở Gazebo/RViz thủ công.
 
-## Topic chính
+Nếu camera không phải thiết bị số 0, thêm `camera_index:=1`. Nếu chỉ muốn
+kiểm tra node mà không mở RViz/camera, dùng `week6_rviz:=false` hoặc
+`show_window:=false`.
 
-| Topic | Kiểu dữ liệu | Chức năng |
+## Topic kiểm tra
+
+| Topic | Kiểu | Ý nghĩa |
 |---|---|---|
-| `/detected_gesture` | `std_msgs/msg/String` | Cử chỉ và confidence, dạng `Gesture|confidence` |
+| `/detected_gesture` | `std_msgs/msg/String` | Cử chỉ và confidence |
 | `/cmd_vel` | `geometry_msgs/msg/Twist` | Lệnh vận tốc robot |
-| `/odom` | `nav_msgs/msg/Odometry` | Phản hồi vị trí và góc quay |
-
-## Kiểm tra
+| `/odom` | `nav_msgs/msg/Odometry` | Phản hồi vị trí/góc quay |
 
 ```bash
 ros2 topic echo /detected_gesture
@@ -101,4 +120,6 @@ ros2 topic echo /cmd_vel
 ros2 topic echo /odom
 ```
 
-Robot chỉ thực hiện hành vi sau khi nhận `Thumbs Up`. Sau khi xác nhận, không cần giữ cử chỉ trong suốt quá trình. `Open Palm` và `Closed Fist` luôn có quyền dừng hoặc hủy hành vi.
+Lưu ý: `ROS_DOMAIN_ID` của các terminal phải giống nhau; webcam cần được
+phép truy cập; máy có GPU lỗi hoặc không có GPU vẫn có thể chạy nhờ cấu hình
+render dự phòng bằng phần mềm trong launch.
