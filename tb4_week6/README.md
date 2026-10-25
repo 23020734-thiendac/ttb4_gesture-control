@@ -1,14 +1,5 @@
 # TB4 Week 6 – Điều khiển TurtleBot 4 bằng cử chỉ tay
 
-## Tóm tắt khối xử lý tuần 6
-
-Khối xử lý tuần 6 nhận hình ảnh từ webcam, dùng OpenCV và MediaPipe để lấy
-landmark bàn tay, sau đó lọc confidence và ổn định nhiều frame. Cử chỉ ổn định
-được gửi qua `/detected_gesture` tới node xử lý hành vi. Node này chọn hành vi,
-nhận `Thumbs Up` xác nhận và phát lệnh vận tốc `/cmd_vel` cho TurtleBot 4.
-Gazebo mô phỏng chuyển động và `/odom` được dùng để kiểm tra quỹ đạo; RViz
-hiển thị robot và trạng thái mô phỏng.
-
 ## Bảng ánh xạ cử chỉ và hành vi
 
 | Cử chỉ tay | Vai trò | Hành vi robot |
@@ -80,13 +71,6 @@ ros2 launch tb4_week6 week6_gesture_control.launch.py \
   x:=5.5 y:=-1.8 z:=0.0 yaw:=0.0 \
   remove_dock:=true week6_rviz:=true show_window:=true
 ```
-
-Launch tự đặt đường dẫn tài nguyên từ package đã cài, chờ Gazebo sẵn sàng rồi
-mới spawn robot và mở RViz. Không cần chạy package tuần trước, không cần copy
-world vào thư mục tuyệt đối khác và không cần mở Gazebo/RViz thủ công.
-
-Nếu camera không phải thiết bị số 0, chạy thêm `camera_index:=1`. Có thể tắt
-RViz bằng `week6_rviz:=false` hoặc tắt cửa sổ camera bằng `show_window:=false`.
 
 ## Topic chính
 

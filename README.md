@@ -1,14 +1,5 @@
 # TurtleBot 4 Auto Gesture Control – Tuần 6
 
-## Tóm tắt khối xử lý tuần 6
-
-Hệ thống tuần 6 gồm ba khối chính: khối camera thu hình từ webcam và dùng
-OpenCV/MediaPipe để nhận diện cử chỉ tay; khối xử lý lọc confidence, ổn định
-nhiều frame, chọn hành vi và chờ tín hiệu xác nhận; khối điều khiển chuyển
-hành vi thành lệnh vận tốc `/cmd_vel` để TurtleBot 4 thực hiện trong Gazebo.
-RViz dùng để quan sát robot, TF và trạng thái mô phỏng. World AWS RoboMaker
-Small House cùng các model cần thiết đã được đóng gói trong `tb4_week6/simulation`.
-
 ## Bảng ánh xạ cử chỉ và hành vi
 
 | Cử chỉ tay | Vai trò trong hệ thống | Hành vi của robot |
@@ -95,14 +86,6 @@ ros2 launch tb4_week6 week6_gesture_control.launch.py \
   show_window:=true
 ```
 
-Launch tự lấy world/model từ `tb4_week6/simulation`, đặt cấu hình render để
-giảm lỗi Gazebo màn hình đen, chờ Gazebo sẵn sàng rồi mới spawn robot và mở
-RViz. Không cần chạy package tuần trước hoặc mở Gazebo/RViz thủ công.
-
-Nếu camera không phải thiết bị số 0, thêm `camera_index:=1`. Nếu chỉ muốn
-kiểm tra node mà không mở RViz/camera, dùng `week6_rviz:=false` hoặc
-`show_window:=false`.
-
 ## Topic kiểm tra
 
 | Topic | Kiểu | Ý nghĩa |
@@ -117,6 +100,3 @@ ros2 topic echo /cmd_vel
 ros2 topic echo /odom
 ```
 
-Lưu ý: `ROS_DOMAIN_ID` của các terminal phải giống nhau; webcam cần được
-phép truy cập; máy có GPU lỗi hoặc không có GPU vẫn có thể chạy nhờ cấu hình
-render dự phòng bằng phần mềm trong launch.
